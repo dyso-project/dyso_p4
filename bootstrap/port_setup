@@ -1,0 +1,13 @@
+ucli
+pm
+port-add 65/0 10G NONE
+port-add 65/1 10G NONE
+an-set -/- 1
+port-add 57/- 100G NONE
+port-loopback 57/- serdes-near
+port-add 58/- 100G NONE
+port-loopback 58/- serdes-near
+port-enb -/-
+exit
+exit
+exit

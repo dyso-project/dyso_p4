@@ -1,0 +1,1 @@
+pktgen.app_disable(1)
