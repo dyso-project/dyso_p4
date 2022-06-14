@@ -1,6 +1,8 @@
 # DySO-P4 Testbed Implementation
 This repository is a prototype of [DySO](https://github.com/ChahwanSong/ChahwanSong.github.io/blob/main/papers/DySO_IFIP2022.pdf) paper in IFIP 2022 on Intel Tofino programmable switch.
 
+:information_source: This repository is uploaded for the purpose of reference, instead of actual-running code. Indeed, configuring your own programmable switch is non-trivial if no knowledge of your hardware information. 
+
 ## Requirements
 We run this prototype under the following environments:
 * SDE-9.2.0 (-> Makefile may not work over SDE-9.7.0. See [control/dyso/cpp/Makefile](https://github.com/dyso-project/dyso_p4/blob/main/control/dyso/cpp/Makefile).)
