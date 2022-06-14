@@ -6,7 +6,7 @@ This repository is a prototype of [DySO](https://github.com/ChahwanSong/ChahwanS
 ## Requirements
 We run this prototype under the following environments:
 * SDE-9.2.0 (-> Makefile may not work over SDE-9.7.0. See [control/dyso/cpp/Makefile](https://github.com/dyso-project/dyso_p4/blob/main/control/dyso/cpp/Makefile).)
-* PcapPlusPlus atop DPDK version above 20 (-> See [control/dyso/pcpp](https://github.com/dyso-project/dyso_p4/tree/main/control/dyso/pcpp))
+* PcapPlusPlus v22.XX atop DPDK v20.11 (-> See [control/dyso/pcpp](https://github.com/dyso-project/dyso_p4/tree/main/control/dyso/pcpp))
 
 
 ## Query generator
