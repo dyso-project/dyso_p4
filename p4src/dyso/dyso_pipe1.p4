@@ -258,6 +258,9 @@ control Pipe1SwitchIngress(
         } 
         // from pipe1 traffic generator
         else if(ig_intr_md.ingress_port == PGEN_PORT_1 && hdr.ethernet.ether_type == ETHERTYPE_PGEN_1) {
+            // timestamp the packet
+            hdr.ethernet.src_addr = ig_prsr_md.global_tstamp;
+
             hdr.ethernet.ether_type = ETHERTYPE_CTRL;
             // ig_tm_md.ucast_egress_port = FR_CTRL_PLANE;
             // ig_tm_md.bypass_egress = 1;
