@@ -95,7 +95,7 @@ control Pipe0SwitchIngress(
             ig_tm_md.bypass_egress = 1;
         } 
         // control packet coming back from port 64 and must be control packet
-        else if (ig_intr_md.ingress_port == 64 && hdr.ethernet.ether_type == ETHERTYPE_CTRL) {
+        else if (ig_intr_md.ingress_port == FR_CTRL_PLANE && hdr.ethernet.ether_type == ETHERTYPE_CTRL) {
             // to pipeline 1 - recirculate via 132 (front panel port 58)
             ig_tm_md.ucast_egress_port = RECIRC_PORT_1;
             ig_tm_md.bypass_egress = 1;

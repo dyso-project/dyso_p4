@@ -2,4 +2,4 @@
 
 DATA=`pwd`/misc/zipf.txt
 
-python `pwd`/control/dyso/config_data.py --path $DATA
+python3 `pwd`/control/dyso/config_data.py --path $DATA

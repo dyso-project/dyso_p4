@@ -3,6 +3,9 @@ const ether_type_t ETHERTYPE_PGEN_0 = 0xBFBF;   // pktgen pipe0 - query
 const ether_type_t ETHERTYPE_PGEN_1 = 0xFBFB;   // pktgen pipe1 - control
 const ether_type_t ETHERTYPE_CTRL = 0xDEAD;      // dyso control
 
+#define FR_CTRL_PLANE 64
+#define TO_CTRL_PLANE 66
+
 #define PGEN_PORT_0 68
 #define PGEN_PORT_1 196
 

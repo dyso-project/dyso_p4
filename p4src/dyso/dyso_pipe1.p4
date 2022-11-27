@@ -159,7 +159,6 @@ control Pipe1SwitchIngress(
         }
     };
 
-
     apply {
         // from pipe0 traffic generator
         // todo: if need to scale up the traffic, then we need to do multicast - check whether the packet was a multicast packet
@@ -197,7 +196,6 @@ control Pipe1SwitchIngress(
             if(meta.key3_hit == 1) {
                 meta.cache_hit = 1;
             }
-
 
             // record packet signature here
             // first stage - always try insert
@@ -261,7 +259,19 @@ control Pipe1SwitchIngress(
         // from pipe1 traffic generator
         else if(ig_intr_md.ingress_port == PGEN_PORT_1 && hdr.ethernet.ether_type == ETHERTYPE_PGEN_1) {
             hdr.ethernet.ether_type = ETHERTYPE_CTRL;
-            ig_tm_md.ucast_egress_port = 64;
+            // ig_tm_md.ucast_egress_port = FR_CTRL_PLANE;
+            // ig_tm_md.bypass_egress = 1;
+            copy_probe_idx_to_hdr();
+            action_rec0_read_and_clear();
+            action_rec1_read_and_clear();
+            action_rec2_read_and_clear();
+            action_rec3_read_and_clear();
+            action_rec4_read_and_clear();
+            action_rec5_read_and_clear();
+            action_rec6_read_and_clear();
+            action_rec7_read_and_clear();
+            
+            ig_tm_md.ucast_egress_port = TO_CTRL_PLANE;
             ig_tm_md.bypass_egress = 1;
         } 
         // from port64 (control plane)
@@ -284,18 +294,20 @@ control Pipe1SwitchIngress(
                 action_key3_update();
             }
 
-            copy_probe_idx_to_hdr();
-            action_rec0_read_and_clear();
-            action_rec1_read_and_clear();
-            action_rec2_read_and_clear();
-            action_rec3_read_and_clear();
-            action_rec4_read_and_clear();
-            action_rec5_read_and_clear();
-            action_rec6_read_and_clear();
-            action_rec7_read_and_clear();
+            drop();
+
+            // copy_probe_idx_to_hdr();
+            // action_rec0_read_and_clear();
+            // action_rec1_read_and_clear();
+            // action_rec2_read_and_clear();
+            // action_rec3_read_and_clear();
+            // action_rec4_read_and_clear();
+            // action_rec5_read_and_clear();
+            // action_rec6_read_and_clear();
+            // action_rec7_read_and_clear();
             
-            ig_tm_md.ucast_egress_port = 65;
-            ig_tm_md.bypass_egress = 1;
+            // ig_tm_md.ucast_egress_port = TO_CTRL_PLANE;
+            // ig_tm_md.bypass_egress = 1;
         }
     }
 }

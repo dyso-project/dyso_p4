@@ -44,7 +44,7 @@ def main():
     data = [reg_offset.make_data([gc.DataTuple('Pipe0SwitchIngress.offset.f1', offset)])]
     reg_offset.entry_mod(target, key, data)
 
-    print "!! Offset set to ==>", offset
+    print ("!! Offset set to ==>", offset)
 
 
 if __name__ == '__main__':

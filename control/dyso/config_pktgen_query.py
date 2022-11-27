@@ -25,7 +25,7 @@ pkt = pkt / Raw(load=bytearray(PKT_LENGTH - len(pkt)))
 
 # Write the packet to the pktgen buffer
 # skip the first 6 bytes for pktgen header
-pktgen.write_pkt_buffer(0, len(pkt) - 6, str(pkt)[6:]) # buffer offset, buffer size, buffer data
+pktgen.write_pkt_buffer(0, len(pkt) - 6, bytes(pkt)[6:]) # buffer offset, buffer size, buffer data
 
 # enable pktgen on pipe 0's port 68 (100Gbps)
 pktgen.enable(make_port(0, 68))  # port 68

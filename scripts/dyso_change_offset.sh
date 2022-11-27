@@ -6,6 +6,6 @@ then
     echo "Usage: ./dyso_change_offset.sh 100"
 else
     # configure offset
-    python `pwd`/control/dyso/config_offset.py --offset $1
+    python3 `pwd`/control/dyso/config_offset.py --offset $1
 fi
 

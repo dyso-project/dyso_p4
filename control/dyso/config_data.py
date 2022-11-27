@@ -34,7 +34,7 @@ def load_data(path):
         data = f.read()
     data = data.strip()
     data = data.split('\n')
-    print "!! Length of data to be loaded: ", len(data)
+    print ("!! Length of data to be loaded: ", len(data))
     
     # it must be a power of two
     assert (len(data) & len(data) -1)== 0
@@ -53,7 +53,7 @@ def main():
     interface, target, bfrt_info = connect()
 
     assert os.path.exists(path)
-    print "!! Data to be loaded from", path
+    print ("!! Data to be loaded from", path)
 
     data = load_data(path)
 
@@ -81,11 +81,11 @@ def main():
     for i in range(len(keys)):
         curr_reg =  'Pipe0SwitchIngress.d' + str(i)
         reg = bfrt_info.table_get(curr_reg)
-        print "!! Populating", curr_reg, "with", len(keys[i]), "entries"
+        print ("!! Populating", curr_reg, "with", len(keys[i]), "entries")
         reg.entry_mod(target, keys[i], vals[i])
     end = time.time()
 
-    print "!! Zipf distribution loaded successfully! Time taken: ",  end - start
+    print ("!! Zipf distribution loaded successfully! Time taken: ",  end - start)
 
 
 if __name__ == '__main__':
