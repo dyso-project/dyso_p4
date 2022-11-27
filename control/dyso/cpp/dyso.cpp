@@ -84,11 +84,11 @@ int app_dyso(bf_switchd_context_t *switchd_ctx) {
 
     printf("Configuring via bfrt_python script...\n");
     fflush(stdout);
-    std::string bfshell_pktgen = BFSHELL " -b " __DIR__ "/../debug/set_key_default.py";
-    system(bfshell_pktgen.c_str());
+    std::string bfshell_init_regs = BFSHELL " -b " __DIR__ "/../debug/set_key_default.py";
+    system(bfshell_init_regs.c_str());
 
-    // printf("\n\n****** Press enter to run *****");
-    // getchar();
+    printf("\n\n****** Press enter to run *****");
+    getchar();
 
     /* Prepare the dev_tgt */
     memset(&dev_tgt, 0, sizeof(dev_tgt));
@@ -220,8 +220,8 @@ int app_dyso(bf_switchd_context_t *switchd_ctx) {
 
     }
 
-    // printf("\n\n *** Press any key to exit... *** \n");
-    // getchar();
+    printf("\n\n *** Press any key to exit... *** \n");
+    getchar();
 
     // /* Run Indefinitely */
     // printf("Run indefinitely...\n");
