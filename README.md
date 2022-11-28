@@ -8,6 +8,13 @@ We run this prototype under the following environments:
 * SDE-9.2.0 (-> Makefile may not work over SDE-9.7.0. See [control/dyso/cpp/Makefile](https://github.com/dyso-project/dyso_p4/blob/main/control/dyso/cpp/Makefile).)
 * PcapPlusPlus v22.XX atop DPDK v20.11 (-> See [control/dyso/pcpp](https://github.com/dyso-project/dyso_p4/tree/main/control/dyso/pcpp))
 
+### :exclamation: Recent Update (30 Nov, 2022)
+:bulb: We updated our code to be runnable on SDE >= 9.7.0. Note that we leverage multi-pipeline (2 pipes) Tofino ASIC. Unfortunately, we found the recent SDE has an issue of multi-pipeline p4 programs (also discussed in Intel Connectivity Academy Forum). For example, your p4 program would not find any valid ports or drivers. 
+To handle this, please follow the instructions:
+1. Compile dyso.p4.
+2. Update the configuration file in the directory `$SDE/install/share/p4/targets/tofino/dyso.conf`, remove pipe 2 and 3.
+3. After two steps, you can run the program, i.e., `./run_switch_d -p dyso`, or run the bash scripts we provide. 
+
 
 ## Query generator
 ![QueryGen](/misc/querygen.jpg)
@@ -36,3 +43,29 @@ In folder [control/dyso/pcpp](https://github.com/dyso-project/dyso_p4/tree/main/
 
 ### Simulation instruction
 See [dyso_simulator.py](dyso_simulation.py) for details.
+
+### Miscellaneous
+- We set a default register value as `777777`. Refer to the file `control/dyso/debug/set_key_default.py`.
+-  
+
+## :exclamation: Issues & Solutions
+
+### PcapPlusPlus Compile Error by `-std=c++11`
+From PcapPlusPlus version 22, Change the compiler version to c++17 by default. 
+Change the line 
+```
+PCAPPP_BUILD_FLAGS := -fPIC -std=c++11
+``` 
+to 
+```
+PCAPPP_BUILD_FLAGS := -fPIC -std=c++17
+``` 
+from the script `/usr/local/etc/PcapPlusPlus.mk`.
+
+### Using Multiple Cores for DPDK Rx/Tx
+Currently, our prototype uses only ONE DPDK RX and ONE DPDK TX core, for simplicity.
+This is because our control packet rate is under 10Gbps, which can be managed using a single core.
+If you want to scale up, you may need to adjust the PcapPlusPlus code.
+
+## Contact
+Please contact to Chahwan Song ([skychahwan@gmail.com](skychahwan@gmail.com))

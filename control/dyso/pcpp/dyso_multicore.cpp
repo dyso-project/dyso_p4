@@ -1,26 +1,25 @@
 #include "src/dyso_multicore.hpp"
 
-
 /**
- * 
+ *
  * (1) Processing
- * On Tofino's main CPU cores, each thread can handle ~2M messages per second.
- * In this prototype, we can cover 1M control packets (i.e. 9M messages) per second.
- * 
+ * On Tofino's (or Server's) main CPU cores, each thread handles messages.
+ * In this prototype, we cover 1M control packets (i.e. 9M messages) per second with Tofino switch's 4 CPU cores.
+ *
  * (2) Messages from DPDK's RX, and to DPDK's TX
- * 
+ *
  * We leverage the shared memory queue (SPSC) whose source is in "src/utils_macro_multicore.h"
- * 
+ *
  * (3) Hard-coded numbers
- *  -- Refer to "src/utils_macro_multicore.h"
- * 
+ *  -- Refer to "src/utils_macro_multicore.h" and "/src/utils_pcpp.h"
+ *
  * Total entries : 64K, which consists of k = 4 chaining and 16K rows in the data plane
  * Each row's items are managed "disjointly" by independent "dyso" policies.
  * For simpliciy, we assume to use 4Byte items.
- * 
+ *
  * (4) Source code of data structure
  *  -- Refer to "src/dyso.hpp"
- * 
+ *
  */
 
 int main(int argc, char const* argv[]) {
@@ -55,7 +54,10 @@ int main(int argc, char const* argv[]) {
     printf("--------\n[%u] Generated %lu dyso, and (%lu)x2 up/down replicas\n",
            dyso_index_, dyso.size(), dysoReplicaUp.size());
 
-    /* pre-install the nodes of 4B keys to be queried in the simulation */
+    /* pre-install the nodes of 4B keys to be queried in the simulation
+     * XXX: this one is to pre-register/generate nodes into DySO Stat Engine for simulation.
+     * In practice, the item can be registered on demands.
+     */
     const uint64_t upperSrcIP = (uint64_t(5) << 20);     // [0, 5M)
     const uint64_t lowerSrcIP = (uint64_t(4085) << 20);  // [4085M, 4096M)
     printf("[%u] Start initializing Dyso nodes...\n", dyso_index_);
@@ -122,6 +124,10 @@ int main(int argc, char const* argv[]) {
                 break;
             }
         }
+#if (DYSODEBUG == 2)
+        if (!msgQueue.empty())
+            printf("[%u INFO] Received batch msg: %lu\n", dyso_index_, msgQueue.size());
+#endif
 
         // (2) process in batch
         for (; !msgQueue.empty(); msgQueue.pop()) {
@@ -132,20 +138,34 @@ int main(int argc, char const* argv[]) {
             if ((msg & MSG_MASK_UPDATE_FLAG) == MSG_MASK_UPDATE_FLAG) {
                 dysoIdx = uint32_t((msg - MSG_MASK_UPDATE_FLAG) >> 32);
                 nCtrlPktRx++;
-                // need to manage the virtual queues for replicas by hand
+                // need to manage the virtual queues for replicas by hand.
                 // the dequeu speed is 1/256 slower than main policy's TXqueue
                 // because 4 DySO workers x 1/64 replica ratio
-                if (nCtrlPktRx % REG_LEN_REC == 0) {  
+                if (nCtrlPktRx % REG_LEN_REC == 0) {
                     virtualQueueUp = (virtualQueueUp == 0) ? 0 : virtualQueueUp - 1;
                     virtualQueueDown = (virtualQueueDown == 0) ? 0 : virtualQueueDown - 1;
                 }
                 dyso[dysoIdx].moveUpdateToActive();
+#if (DYSODEBUG == 2)
+                printf("[%u INFO] Get ACK of DysoIdx: %u\n", dyso_index_, dysoIdx);
+#endif
             }
             // packet signatures (hash values for monitoring)
             else {
+#if (DYSODEBUG >= 1)
+                if (clockCycle % (1 << 20) == 0) {
+                    end = std::chrono::steady_clock::now();
+                    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+                    printf("[%u INFO] Avg to process 1 msgs: %lu (ns)\n", dyso_index_, uint64_t(elapsed) / clockCycle);
+                    start = end;
+                }
+#endif
                 // parse the message and feed to the corresponding policy (dysoIdx)
                 parseMsgAtStatThread(msg, dysoIdx, hashkey);
                 dyso[dysoIdx].updatePolicyStat(hashkey);
+#if (DYSODEBUG == 2)
+                printf("[%u INFO] Get Signature of DysoIdx: %u, hashkey: %u\n", dyso_index_, dysoIdx, hashkey);
+#endif
 
                 // process for replicas
                 if (checkReplica(dysoIdx, dyso_index_)) {
@@ -170,7 +190,10 @@ int main(int argc, char const* argv[]) {
                     // for sanity, we bound the aging period
                     agingPeriod = (hitRatioUp >= hitRatioDown) ? agingPeriod * 2 : std::max(agingPeriod / 2, uint32_t(1));
                     agingPeriod = (agingPeriod > 1024) ? 32 : agingPeriod;
-
+#if (DYSODEBUG >= 1)
+                    printf("[%u Aging] Self-tuning: HitRatio Up(%0.4f), down(%0.4f) -> selected: %u\n",
+                           dyso_index_, hitRatioUp / dysoReplicaUp.size(), hitRatioDown / dysoReplicaDown.size(), agingPeriod);
+#endif
                     // reconfigure all repllicas
                     for (auto& replica : dysoReplicaUp)
                         replica.initAllReplica(agingPeriod << 1);

@@ -158,7 +158,7 @@ class StatWorkerThread : public pcpp::DpdkWorkerThread {
     void enQueueCtrlPkt(pcpp::dysoCtrlhdr* data, std::queue<uint64_t>* bulkMsgQueue) {
         // index of update
         uint32_t index_update = (ntohl(data->index_update));  // index of updated dyso
-        if (index_update != 7777777) {                        // ignore empty-update
+        if (index_update != 7777777) {                        // ignore empty-update (see control/dyso/debug/set_key_default.py)
             uint64_t msg_update = (uint64_t(index_update) << 32) + MSG_MASK_UPDATE_FLAG;
             bulkMsgQueue[index_update % NUM_DYSO_WORKER].push(msg_update);
         }
@@ -215,7 +215,7 @@ class StatWorkerThread : public pcpp::DpdkWorkerThread {
             bulkMsgQueue[(reg6 >> REG_LEN_HASHKEY_BIT) % NUM_DYSO_WORKER].push(msg6);
         }
 
-        // rec3
+        // rec7
         uint32_t reg7 = ntohl(data->rec7);
         if (reg7 != 0) {
             uint64_t msg7 = createMsgToStatThread(index_probe + (reg7 >> REG_LEN_HASHKEY_BIT), REG_MASK_GET_HASHKEY & reg7);
