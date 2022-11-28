@@ -44,11 +44,10 @@ def handle_pkt(pkt):
     print("Packet length : %d\n-------------------------------\n\n\n" % len(pkt))
 
 def main():
-    ifaces = os.listdir('/sys/class/net/')
+    # ifaces = os.listdir('/sys/class/net/')
     # ifaces = filter(lambda i: '' in i, ifaces) # print interface
 
-    # iface = 'enp4s0f0' # port 64
-    iface = 'enp4s0f1' # port 65
+    iface = 'ens1f0' 
     print("sniffing on %s" % iface)
 
     # bind layer

@@ -411,7 +411,7 @@ class Dyso {
 
         /* triggered once Dyso's CP gets Update Packet */
         if (cchUpdate_.empty() || replaceInProgress_ == false) {
-            printf("[*WARNING*] Dyso %u (Progress:%d) ---> Mysterious ACK, maybe from prior experiment?\n",
+            printf("[*WARNING*] Dyso %u (Progress:%d) ---> Mysterious ACK, maybe from prior experiment?\n\n",
                    this->idx_, replaceInProgress_);
             exit(1);
         }

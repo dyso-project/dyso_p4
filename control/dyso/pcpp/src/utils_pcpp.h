@@ -20,8 +20,8 @@
 #include "TablePrinter.h"
 
 #define MBUF_POOL_SIZE (16 * 1024 - 1)
-#define DEVICE_ID_UPDATE (0)
-#define DEVICE_ID_STAT (1)
+#define DEVICE_ID_UPDATE (1)
+#define DEVICE_ID_STAT (0)
 
 void onApplicationInterrupted(void* cookie) {
     std::cout << std::endl

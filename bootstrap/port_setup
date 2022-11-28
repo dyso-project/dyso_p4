@@ -1,8 +1,8 @@
 ucli
 pm
-port-add 33/0 10G NONE
-port-add 33/2 10G NONE
-an-set -/- 1
+port-add 10/2 25G NONE
+port-add 10/3 25G NONE
+an-set 10/- 2
 port-add 31/- 100G NONE
 port-loopback 31/- mac-near
 port-add 1/- 100G NONE

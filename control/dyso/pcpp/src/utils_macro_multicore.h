@@ -11,7 +11,7 @@
 #include "utils_header.h"
 
 /* debugging flag */
-#define DYSODEBUG (1) // 2: debugging, 1: warn, 0: info
+#define DYSODEBUG (0) // 2: debugging, 1: warn, 0: info
 
 /* Stage Allocation from P4*/
 constexpr uint32_t STAGE_CACHE = 4;                                    // number of match-units

@@ -11,15 +11,6 @@ control Pipe0SwitchIngress(
     inout ingress_intrinsic_metadata_for_deparser_t  ig_dprsr_md,
     inout ingress_intrinsic_metadata_for_tm_t        ig_tm_md)
 {
-    bit<32> tstamp_diff = 0;
-
-    Register<bit<REG_WIDTH>, _>(1) delta;
-    RegisterAction<bit<REG_WIDTH>, _, bit<REG_WIDTH>>(delta) write_delta = {
-        void apply(inout bit<REG_WIDTH> val, out bit<REG_WIDTH> rv){
-            val = tstamp_diff;
-            rv = val;
-        }
-    };
 
     Register<bit<REG_WIDTH>, _>(REG_LEN) d0;
     RegisterAction<bit<REG_WIDTH>, _, bit<REG_WIDTH>>(d0) read_d0 = {
@@ -103,15 +94,8 @@ control Pipe0SwitchIngress(
             ig_tm_md.ucast_egress_port = RECIRC_PORT_0;
             ig_tm_md.bypass_egress = 1;
         } 
-        // control packet coming back from port 64 and must be control packet
+        // control packet coming back from port FR_CTRL_PLANE and must be control packet
         else if (ig_intr_md.ingress_port == FR_CTRL_PLANE && hdr.ethernet.ether_type == ETHERTYPE_CTRL) {
-            // calculate the delta spent at the control plane
-            // write to register
-            bit<32> t0 = hdr.ethernet.src_addr[31:0];
-            bit<32> t1 = ig_prsr_md.global_tstamp[31:0];
-            tstamp_diff = t1 - t0;
-            write_delta.execute(0);
-
             // to pipeline 1 - recirculate via 132 (front panel port 58)
             ig_tm_md.ucast_egress_port = RECIRC_PORT_1;
             ig_tm_md.bypass_egress = 1;

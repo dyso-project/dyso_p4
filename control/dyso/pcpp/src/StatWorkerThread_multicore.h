@@ -72,7 +72,14 @@ class StatWorkerThread : public pcpp::DpdkWorkerThread {
         auto start = std::chrono::steady_clock::now();
         auto end = std::chrono::steady_clock::now();
 
+        uint64_t total_elapsed_time = 0;
+        uint64_t total_number_of_pkts = 0;
+        auto start_ts_per_batch = std::chrono::steady_clock::now();
+        auto finish_ts_per_batch = std::chrono::steady_clock::now();
+
         while (!m_Stop) {
+            start_ts_per_batch = std::chrono::steady_clock::now();
+
             // receive a batch of packets
             packetsReceived = m_WorkerConfig.recvPacketFrom->receivePackets(packetArr, MAX_RECEIVE_BURST, rxQueueId);
 
@@ -140,8 +147,24 @@ class StatWorkerThread : public pcpp::DpdkWorkerThread {
                 }
             }
 
-#if (DYSODEBUG >= 1)
-            if (totalCount > (1 << 20)) {
+            /* LOGGING TIMESTAMP */
+            if (packetsReceived > 0) {
+                finish_ts_per_batch = std::chrono::steady_clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_ts_per_batch - start_ts_per_batch).count();
+                total_elapsed_time += uint64_t(elapsed);
+                total_number_of_pkts += packetsReceived;
+            }
+
+            if (total_number_of_pkts > 1000000) { // 1 Million Pkts
+                printf("[StatWorkerThread] Avg time to process 1 pkt: %lu (ns)\n", total_elapsed_time / total_number_of_pkts);
+                total_number_of_pkts = 0;
+                total_elapsed_time = 0;
+            }
+            /*-------------------*/
+
+
+#if (DYSODEBUG == 2)
+            if (totalCount > (1 << 23)) {
                 end = std::chrono::steady_clock::now();
                 auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
                 printf("[StatWorkerThread] Time to process 1 msg: %lu (ns)\n", uint64_t(elapsed) / totalCount);
@@ -158,7 +181,7 @@ class StatWorkerThread : public pcpp::DpdkWorkerThread {
     void enQueueCtrlPkt(pcpp::dysoCtrlhdr* data, std::queue<uint64_t>* bulkMsgQueue) {
         // index of update
         uint32_t index_update = (ntohl(data->index_update));  // index of updated dyso
-        if (index_update != 7777777) {                        // ignore empty-update (see control/dyso/debug/set_key_default.py)
+        if (index_update != 7777777) {                        // ignore empty-update
             uint64_t msg_update = (uint64_t(index_update) << 32) + MSG_MASK_UPDATE_FLAG;
             bulkMsgQueue[index_update % NUM_DYSO_WORKER].push(msg_update);
         }

@@ -41,7 +41,7 @@ def sendControl(idx_update, iface):
                                                     key1=6,
                                                     key2=7,
                                                     key3=8,
-                                                    index_probe=0,
+                                                    index_probe=idx_update,
                                                     rec0=0,
                                                     rec1=0,
                                                     rec2=0,
@@ -53,10 +53,10 @@ def sendControl(idx_update, iface):
     sendp(controlPkt, iface=iface, verbose=False)
 
 def main():
-    iface = 'enp4s0f0'
+    iface = 'ens1f1'
     print('---------- Send pakcets ----------')
     # for i in range(256):
-    sendControl(10, iface)
+    sendControl(1, iface)
 
 if __name__ == '__main__':
     main()

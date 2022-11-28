@@ -114,7 +114,17 @@ int main(int argc, char const* argv[]) {
     uint64_t clockCycle = 0;
     auto start = std::chrono::steady_clock::now();
     auto end = std::chrono::steady_clock::now();
+
+
+    uint64_t total_elapsed_time = 0;
+    uint64_t total_number_of_msgs = 0;
+    auto start_ts_per_batch = std::chrono::steady_clock::now();
+    auto finish_ts_per_batch = std::chrono::steady_clock::now();
+    uint64_t batch_size = 0;
+    
     while (true) {
+        start_ts_per_batch = std::chrono::steady_clock::now();
+
         // (1) flush the msgs from rxQueue (in batch of 1000)
         for (uint32_t i = 0; i < 1000; i++) {
             if ((fetched = rxQueue->front()) != nullptr) {
@@ -124,6 +134,7 @@ int main(int argc, char const* argv[]) {
                 break;
             }
         }
+        batch_size = msgQueue.size();
 #if (DYSODEBUG == 2)
         if (!msgQueue.empty())
             printf("[%u INFO] Received batch msg: %lu\n", dyso_index_, msgQueue.size());
@@ -152,8 +163,8 @@ int main(int argc, char const* argv[]) {
             }
             // packet signatures (hash values for monitoring)
             else {
-#if (DYSODEBUG >= 1)
-                if (clockCycle % (1 << 20) == 0) {
+#if (DYSODEBUG == 2)
+                if (clockCycle % (1 << 23) == 0) {
                     end = std::chrono::steady_clock::now();
                     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
                     printf("[%u INFO] Avg to process 1 msgs: %lu (ns)\n", dyso_index_, uint64_t(elapsed) / clockCycle);
@@ -191,7 +202,7 @@ int main(int argc, char const* argv[]) {
                     agingPeriod = (hitRatioUp >= hitRatioDown) ? agingPeriod * 2 : std::max(agingPeriod / 2, uint32_t(1));
                     agingPeriod = (agingPeriod > 1024) ? 32 : agingPeriod;
 #if (DYSODEBUG >= 1)
-                    printf("[%u Aging] Self-tuning: HitRatio Up(%0.4f), down(%0.4f) -> selected: %u\n",
+                    printf("\t[%u Aging] Self-tuning: HitRatio Up(%0.4f), down(%0.4f) -> selected: %u\n",
                            dyso_index_, hitRatioUp / dysoReplicaUp.size(), hitRatioDown / dysoReplicaDown.size(), agingPeriod);
 #endif
                     // reconfigure all repllicas
@@ -208,6 +219,22 @@ int main(int argc, char const* argv[]) {
                 }
             }
         }
+
+
+        /* LOGGING TIMESTAMP */
+        if (batch_size > 0) {
+            finish_ts_per_batch = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_ts_per_batch - start_ts_per_batch).count();
+            total_elapsed_time += uint64_t(elapsed);
+            total_number_of_msgs += batch_size;
+        }
+
+        if (total_number_of_msgs > (1 << 23)) {
+            printf("[DySO %u] Avg time to process 1 msg: %lu (ns)\n", dyso_index_, total_elapsed_time / total_number_of_msgs);
+            total_number_of_msgs = 0;
+            total_elapsed_time = 0;
+        }
+        /*-------------------*/
     }
 
     return 0;

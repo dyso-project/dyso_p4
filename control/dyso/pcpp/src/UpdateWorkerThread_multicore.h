@@ -55,12 +55,15 @@ class UpdateWorkerThread : public pcpp::DpdkWorkerThread {
         auto start = std::chrono::steady_clock::now();
         auto end = std::chrono::steady_clock::now();
 
+        uint64_t total_elapsed_time = 0;
+        uint64_t total_number_of_pkts = 0;
+        auto start_ts_per_batch = std::chrono::steady_clock::now();
+        auto finish_ts_per_batch = std::chrono::steady_clock::now();
 
         /* we use only one RxQueue / TxQueue per each core */
         auto rxQueueId = m_WorkerConfig.rxQueueList.front();
         auto txQueueId = m_WorkerConfig.txQueueList.front();
         assert(m_WorkerConfig.rxQueueList.size() == 1 && m_WorkerConfig.txQueueList.size() == 1);
-
 
         /* before starting simulation, refresh all results from prior experiments */
         pcpp::dysoCtrlhdr* dummyData;
@@ -70,12 +73,12 @@ class UpdateWorkerThread : public pcpp::DpdkWorkerThread {
                 m_updateQueue[i]->pop();
             assert(m_updateQueue[i]->front() == nullptr);
         }
-        
-        printf("[UpdateWorkerThread] Successfully flushed all previous results.\nNow we can start new evaluation.\n");
 
-
+        printf("[UpdateWorkerThread] Successfully flushed all previous results.\n--> Now we can start new evaluation.\n");
 
         while (!m_Stop) {
+            start_ts_per_batch = std::chrono::steady_clock::now();
+
             /* step 1. receive a batch of update packets from data plane */
             packetsReceived = m_WorkerConfig.recvPacketFrom->receivePackets(packetArr, MAX_RECEIVE_BURST, rxQueueId);
 
@@ -88,7 +91,9 @@ class UpdateWorkerThread : public pcpp::DpdkWorkerThread {
                     exit(1);
                 }
                 ethertype = pcpp::netToHost16(ethernetLayer->getEthHeader()->etherType);
-
+#if (DYSODEBUG == 2)
+                printf("[UpdateCore] Received packet with ethertype %u\n", ethertype);
+#endif
                 /* Ether type (update: 0xDEAD=57005) */
                 /* Update Header then send back to Data plane */
                 if (ethertype == 57005) {
@@ -110,7 +115,7 @@ class UpdateWorkerThread : public pcpp::DpdkWorkerThread {
                             m_updateQueue[i % NUM_DYSO_WORKER]->pop();
 #if (DYSODEBUG == 2)
                             printf("[UpdateWorkerThread] Sent update of %u-th bin\n", ntohl(data->index_update));
-#endif  
+#endif
                             m_WorkerConfig.sendPacketTo->sendPacket(parsedPacket, txQueueId, false);
                             success_dequeue = true;
                             nRoundRobin = (i + 1) % NUM_DYSO_WORKER;
@@ -120,6 +125,9 @@ class UpdateWorkerThread : public pcpp::DpdkWorkerThread {
 
                     // if failed to dequeue (i.e., nothing to update)
                     if (!success_dequeue) {
+#if (DYSODEBUG == 2)
+                            printf("[UpdateWorkerThread] Nothing to update, use dummy: index_update=7777777\n");
+#endif                  
                         data->index_update = htonl(7777777);
                         m_WorkerConfig.sendPacketTo->sendPacket(parsedPacket, txQueueId, false);
                     }
@@ -128,8 +136,23 @@ class UpdateWorkerThread : public pcpp::DpdkWorkerThread {
                 }
             }
 
-#if (DYSODEBUG == 1)
-            if (totalCount > (1 << 20)) {
+            /* LOGGING TIMESTAMP */
+            if (packetsReceived > 0) {
+                finish_ts_per_batch = std::chrono::steady_clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_ts_per_batch - start_ts_per_batch).count();
+                total_elapsed_time += uint64_t(elapsed);
+                total_number_of_pkts += packetsReceived;
+            }
+
+            if (total_number_of_pkts > 1000000) { // 1 Million Pkts
+                printf("[UpdateWorkerThread] Avg time to process 1 pkt: %lu (ns)\n", total_elapsed_time / total_number_of_pkts);
+                total_number_of_pkts = 0;
+                total_elapsed_time = 0;
+            }
+            /*-------------------*/
+
+#if (DYSODEBUG == 2)
+            if (totalCount > (1 << 23)) {
                 end = std::chrono::steady_clock::now();
                 auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
                 printf("[UpdateWorkerThread] Time to process 1 packet: %lu (ns) \n", uint64_t(elapsed) / totalCount);
@@ -137,7 +160,6 @@ class UpdateWorkerThread : public pcpp::DpdkWorkerThread {
                 start = end;
             }
 #endif
-
         }
         return true;
     }

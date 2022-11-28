@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 #ifndef PROG_NAME
-#error "Please add -DPROG_NAME=\"netcache\" to CPPFLAGS"
+#error "Please add -DPROG_NAME=\"dyso\" to CPPFLAGS"
 #endif
 
 #define CONF_FILE_DIR "share/p4/targets/tofino"
@@ -87,8 +87,11 @@ int app_dyso(bf_switchd_context_t *switchd_ctx) {
     std::string bfshell_init_regs = BFSHELL " -b " __DIR__ "/../debug/set_key_default.py";
     system(bfshell_init_regs.c_str());
 
-    printf("\n\n****** Press enter to run *****");
-    getchar();
+    std::string bfshell_init_ports = BFSHELL " -f " __DIR__ "/../../../bootstrap/port_setup";
+    system(bfshell_init_ports.c_str());
+
+    // printf("\n\n****** Press enter to run *****");
+    // getchar();
 
     /* Prepare the dev_tgt */
     memset(&dev_tgt, 0, sizeof(dev_tgt));
@@ -219,9 +222,6 @@ int app_dyso(bf_switchd_context_t *switchd_ctx) {
         CHECK_BF_STATUS(status);
 
     }
-
-    printf("\n\n *** Press any key to exit... *** \n");
-    getchar();
 
     // /* Run Indefinitely */
     // printf("Run indefinitely...\n");

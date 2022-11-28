@@ -6,7 +6,7 @@ ETHERTYPE = 0xFBFB  # used to identify pktgen pkt
 SRC_MAC = "BF:CC:11:22:33:44"  # doesn't matter
 PKT_LENGTH = 76 # 60, 124, 508, 1020, 1514
 
-# TIME_PERIOD = 200  # 200ns -> 5 Mpps
+# TIME_PERIOD = 200  # 500ns -> 2 Mpps
 TIME_PERIOD = 1000  # control packet rate : 1mpps
 
 def make_port(pipe, local_port):
