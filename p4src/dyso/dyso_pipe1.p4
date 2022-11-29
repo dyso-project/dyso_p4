@@ -169,9 +169,9 @@ control Pipe1SwitchIngress(
             get_crc32_mpeg();
             get_indices();
             get_packet_sig();
-            reg_total_number_action.execute(0);
+            reg_total_number_action.execute(0); /* debugging */
+            
             copy_match();
-
             // cache matching here
             // first stage - always try
             // return 0 if miss, 1 if hit 
@@ -198,7 +198,7 @@ control Pipe1SwitchIngress(
                 meta.cache_hit = 1;
             }
 
-
+            /* monitoring */
             // record packet signature here
             // first stage - always try insert
             meta.rec0_ins = rec0_update.execute(meta.rec_idx);
@@ -251,6 +251,7 @@ control Pipe1SwitchIngress(
                 tmp6 = 1;
             }
 
+            /* debugging */
             if (meta.cache_hit == 1) {
                 reg_hit_number_action.execute(0);
             }
@@ -269,7 +270,7 @@ control Pipe1SwitchIngress(
             // todo: update keys and copy record
             check_update_dummy();
             copy_update();
-            copy_probe();
+            copy_probe(); /* monitoring */
             
             if (meta.real_update == 1) {
                 action_key0_update();
@@ -284,6 +285,7 @@ control Pipe1SwitchIngress(
                 action_key3_update();
             }
 
+            /* monitoring */
             copy_probe_idx_to_hdr();
             action_rec0_read_and_clear();
             action_rec1_read_and_clear();
